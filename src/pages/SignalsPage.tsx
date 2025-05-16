@@ -10,18 +10,19 @@ const SignalsPage: React.FC = () => {
   const [selectedCoin, setSelectedCoin] = useState<string>('Todos');
   const [selectedDirection, setSelectedDirection] = useState<string>('Todos');
 
-  // Garantir que signals seja sempre um array
-  const safeSignals = Array.isArray(signals) ? signals : [];
+  // Proteção extra: sempre converte signals em array
+  const safeSignals = Array.isArray(signals) ? signals : (signals ? [signals] : []);
+
+  // Log para debug: veja no console o que está vindo
+  console.log('DEBUG - signals:', signals, 'safeSignals:', safeSignals);
 
   // Lista de moedas disponíveis para o filtro
-  const availableCoins = safeSignals.map(signal => signal.coin);
-  // Usar Array.from em vez de spread para compatibilidade
+  const availableCoins = safeSignals.map(signal => signal && signal.coin).filter(Boolean);
   const uniqueCoins = Array.from(new Set(availableCoins));
 
   // Filtrar sinais com verificação de segurança
   const filteredSignals = safeSignals.filter(signal => {
     if (!signal) return false;
-    
     const coinMatch = selectedCoin === 'Todos' || signal.coin === selectedCoin;
     const directionMatch = selectedDirection === 'Todos' || signal.direction === selectedDirection;
     const timeframeMatch = selectedTimeframe === 'Todos' || signal.timeframe === selectedTimeframe;
@@ -34,7 +35,7 @@ const SignalsPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 pb-8">
       <h2 className="text-2xl font-bold mb-6 text-gradient">Sinais Automáticos</h2>
-      
+
       {/* Filtros */}
       <FilterBar
         selectedCoin={selectedCoin}
@@ -43,28 +44,28 @@ const SignalsPage: React.FC = () => {
         setSelectedTimeframe={setSelectedTimeframe}
         selectedDirection={selectedDirection}
         setSelectedDirection={setSelectedDirection}
-        coins={uniqueCoins}
+        coins={uniqueCoins.length > 0 ? uniqueCoins : ['Todos']}
       />
-      
+
       {loading && (
         <div className="glass p-8 rounded-lg text-center animate-pulse">
           <p className="text-lg">Carregando sinais...</p>
         </div>
       )}
-      
+
       {error && (
         <div className="glass p-4 rounded-lg bg-red-900/20 border border-red-800 mb-4">
           <p className="text-red-400">Erro ao carregar sinais: {error}</p>
         </div>
       )}
-      
+
       {!loading && !error && (!safeSignals.length || filteredSignals.length === 0) && (
         <div className="glass p-8 rounded-lg text-center">
           <p className="text-lg">Nenhum sinal encontrado para os filtros selecionados.</p>
           <p className="text-gray-400 mt-2">Tente mudar os filtros ou aguarde novos sinais.</p>
         </div>
       )}
-      
+
       {!loading && !error && Array.isArray(filteredSignals) && filteredSignals.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredSignals.map((signal, index) => (
@@ -81,11 +82,11 @@ const SignalsPage: React.FC = () => {
                   reason={signal.reason}
                   timestamp={signal.timestamp}
                 />
-                
+
                 {Array.isArray(signal.indicators) && (
                   <IndicatorBar indicators={signal.indicators} />
                 )}
-                
+
                 <ChartCard
                   coin={signal.coin}
                   timeframe={signal.timeframe}
@@ -99,7 +100,7 @@ const SignalsPage: React.FC = () => {
           ))}
         </div>
       )}
-      
+
       {/* Preços spot com verificação de segurança */}
       {Object.keys(safeSpotPrices).length > 0 && (
         <div className="mt-8">
