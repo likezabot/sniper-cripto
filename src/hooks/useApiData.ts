@@ -55,7 +55,7 @@ export const useSpotPrices = (): CryptoApiHookResult => {
   return { loading, error, data };
 };
 
-// Hook para buscar candles de futuros via Binance
+// Hook para buscar candles de futuros via Binance (com proxy)
 export const useFuturesCandles = (
   symbol: string = 'BTCUSDT',
   interval: string = '15m',
@@ -69,7 +69,7 @@ export const useFuturesCandles = (
     setLoading(true);
     try {
       const response = await fetch(
-        `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+        `https://corsproxy.io/?https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
       );
       
       if (!response.ok) {
@@ -107,10 +107,6 @@ export const useFuturesCandles = (
     fetchCandles();
     
     // Atualizar baseado no intervalo
-    // 15m = 15 * 60 * 1000 = 900000ms
-    // 30m = 30 * 60 * 1000 = 1800000ms
-    // 1h = 60 * 60 * 1000 = 3600000ms
-    // 4h = 4 * 60 * 60 * 1000 = 14400000ms
     let updateInterval = 60000; // Default 1 minuto
     
     if (interval === '15m') updateInterval = 60000; // Atualizar a cada minuto para 15m
@@ -126,7 +122,7 @@ export const useFuturesCandles = (
   return { loading, error, data };
 };
 
-// Hook para monitorar múltiplos pares de futuros
+// Hook para monitorar múltiplos pares de futuros (com proxy)
 export const useMultipleFuturesCandles = (
   symbols: string[] = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'TRXUSDT'],
   interval: string = '15m'
@@ -146,7 +142,7 @@ export const useMultipleFuturesCandles = (
       const fetchData = async () => {
         try {
           const response = await fetch(
-            `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=100`
+            `https://corsproxy.io/?https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=100`
           );
           
           if (!response.ok) {
@@ -207,7 +203,7 @@ export const useMultipleFuturesCandles = (
         const fetchData = async () => {
           try {
             const response = await fetch(
-              `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=100`
+              `https://corsproxy.io/?https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=100`
             );
             
             if (!response.ok) {
@@ -241,7 +237,6 @@ export const useMultipleFuturesCandles = (
             }));
           } catch (err: any) {
             console.error(`Erro ao atualizar candles para ${symbol}:`, err);
-            // Não atualizar o estado de erro se já temos dados
             if (results[symbol]?.data) {
               return;
             }
